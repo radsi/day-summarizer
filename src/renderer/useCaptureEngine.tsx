@@ -37,7 +37,7 @@ export function useCaptureEngine(
         const meta = await doCapture(config);
         onCaptureDoneRef.current(meta);
 
-        const shouldStop = await checkEnd(endTimestampRef.current);
+        const shouldStop = await checkEnd(endTimestampRef.current, config);
         if (shouldStop) {
           setTimeout(() => onStopRef.current?.(), 0);
 
@@ -58,13 +58,16 @@ export function useCaptureEngine(
     };
   }, []);
 }
-const checkEnd = async (endTimestamp: number | null): Promise<boolean> => {
+const checkEnd = async (
+  endTimestamp: number | null,
+  config: any,
+): Promise<boolean> => {
   if (!endTimestamp) return false;
 
   if (Date.now() >= endTimestamp) {
     try {
       window.electronAPI.stopCapture();
-      await window.electronAPI.buildSlideshowVideo();
+      await window.electronAPI.buildSlideshowVideo(config);
     } catch (err) {
       console.error('Error during auto-stop:', err);
     }
