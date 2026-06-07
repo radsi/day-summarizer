@@ -80,11 +80,18 @@ const checkEnd = async (
 
 function parseEndTime(time: string): number {
   const [h, m] = time.split(':').map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d.getTime();
-}
 
+  const now = new Date();
+  const target = new Date();
+
+  target.setHours(h, m, 0, 0);
+
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  return target.getTime();
+}
 export async function takeScreenshotFromRenderer(): Promise<Uint8Array> {
   const sources = await window.electronAPI.getScreenSources();
 
