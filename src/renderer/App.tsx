@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { useCaptureEngine } from './useCaptureEngine';
 import { CaptureMeta, CaptureConfig } from './types';
@@ -106,29 +105,32 @@ function TimerConfiguration({
           </div>
         </div>
 
+        <div className="timer-config__section">
+          <p className="timer-config__label">
+            {config.captureType === 'recording'
+              ? 'Recording duration'
+              : 'Image duration on slideshow'}
+            : <strong>{config.duration}s</strong>
+          </p>
+          <input
+            type="range"
+            min={1}
+            max={5}
+            step={1}
+            value={config.duration}
+            onChange={(e) =>
+              setConfig((c) => ({ ...c, duration: Number(e.target.value) }))
+            }
+            className="timer-config__range"
+          />
+          <div className="timer-config__range-labels">
+            <span>1s</span>
+            <span>5s</span>
+          </div>
+        </div>
+
         {config.captureType === 'recording' && (
           <>
-            <div className="timer-config__section">
-              <p className="timer-config__label">
-                Recording duration: <strong>{config.duration}s</strong>
-              </p>
-              <input
-                type="range"
-                min={1}
-                max={5}
-                step={1}
-                value={config.duration}
-                onChange={(e) =>
-                  setConfig((c) => ({ ...c, duration: Number(e.target.value) }))
-                }
-                className="timer-config__range"
-              />
-              <div className="timer-config__range-labels">
-                <span>1s</span>
-                <span>5s</span>
-              </div>
-            </div>
-
             <div className="timer-config__section timer-config__audio">
               <p className="timer-config__label">Audio sources</p>
               {CAPTURE_CAPS.desktopAudio && (
@@ -240,7 +242,7 @@ export default function Main() {
     } else {
       await window.electronAPI.stopCapture();
       if (history.length > 1) {
-        await window.electronAPI.buildSlideshowVideo();
+        await window.electronAPI.buildSlideshowVideo(config);
       } else {
         window.electronAPI.clearCaptures();
       }
