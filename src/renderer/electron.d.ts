@@ -12,7 +12,6 @@ declare global {
       }) => Promise<CaptureMeta>;
       onDoCapture: (cb: (config: CaptureConfig) => void) => void;
       onCaptureDone: (cb: (meta: CaptureMeta) => void) => void;
-      triggerCapture: (config: CaptureConfig) => void;
       removeDoCapture: (cb: (config: CaptureConfig) => void) => void;
       saveMedia: (fileName: string, data: Uint8Array) => Promise<string>;
       getScreenSources: () => Promise<{ id: string; name: string }[]>;
