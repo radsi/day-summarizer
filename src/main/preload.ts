@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('save-media', fileName, Array.from(buffer)),
 
   getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
-  buildSlideshowVideo: () => ipcRenderer.invoke('build-slideshow-video'),
+  buildSlideshowVideo: (config: any) =>
+    ipcRenderer.invoke('build-slideshow-video', config),
   clearCaptures: () => ipcRenderer.invoke('clear-captures'),
 });
