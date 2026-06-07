@@ -4,7 +4,7 @@ import { useCaptureEngine } from './useCaptureEngine';
 import { CaptureMeta, CaptureConfig } from './types';
 
 export const CAPTURE_CAPS = {
-  desktopAudio: window.electronAPI.platform !== 'darwin',
+  desktopAudio: window.electronAPI.platform === 'win32',
 };
 
 function CaptureHistory({ history }: { history: CaptureMeta[] }) {
