@@ -2,6 +2,8 @@
 
 Desktop application that captures screenshots or short screen recordings at fixed intervals throughout the day and automatically generates a summary video from all captured moments.
 
+**You need to have FFMPEG installed**
+
 ![](https://cdn.hackclub.com/019ea168-a0c6-79e7-a896-c39ad34693c5/image.png)
 
 ---
