@@ -16,7 +16,7 @@ declare global {
       removeDoCapture: (cb: (config: CaptureConfig) => void) => void;
       saveMedia: (fileName: string, data: Uint8Array) => Promise<string>;
       getScreenSources: () => Promise<{ id: string; name: string }[]>;
-      buildSlideshowVideo: () => Promise<boolean>;
+      buildSlideshowVideo: (config: any) => Promise<boolean>;
       clearCaptures: () => boolean;
       platform: NodeJS.Platform;
     };
