@@ -129,74 +129,105 @@ async function takeRecordingFromRenderer(
     .getScreenSources()
     .then((sources) => sources[0]?.id);
 
-  const videoStream = await navigator.mediaDevices.getUserMedia({
+  const supportsDesktopAudio =
+    config.captureDesktopAudio && window.electronAPI.platform === 'win32';
+
+  const desktopStream = await navigator.mediaDevices.getUserMedia({
+    audio: supportsDesktopAudio
+      ? ({
+          mandatory: {
+            chromeMediaSource: 'desktop',
+          },
+        } as any)
+      : false,
     video: {
       mandatory: {
         chromeMediaSource: 'desktop',
         chromeMediaSourceId: sourceId,
       },
     } as any,
-    audio: false,
   });
 
-  const audioContext = new AudioContext();
-  const destination = audioContext.createMediaStreamDestination();
+  let mixedAudioTrack: MediaStreamTrack | null = null;
+  let micStream: MediaStream | null = null;
 
-  if (config.captureMic) {
-    const micStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: false,
-    });
+  if (
+    config.captureMic ||
+    (supportsDesktopAudio && desktopStream.getAudioTracks().length > 0)
+  ) {
+    const audioContext = new AudioContext();
+    const destination = audioContext.createMediaStreamDestination();
 
-    const micSource = audioContext.createMediaStreamSource(micStream);
-    micSource.connect(destination);
-  }
+    try {
+      if (supportsDesktopAudio && desktopStream.getAudioTracks().length > 0) {
+        const desktopSource = audioContext.createMediaStreamSource(
+          new MediaStream(desktopStream.getAudioTracks()),
+        );
 
-  if (config.captureDesktopAudio && window.electronAPI.platform == 'win32') {
-    const desktopAudioStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        mandatory: {
-          chromeMediaSource: 'desktop',
+        desktopSource.connect(destination);
+      }
+
+      if (config.captureMic) {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
+
+        const micSource = audioContext.createMediaStreamSource(micStream);
+
+        micSource.connect(destination);
+      }
+
+      mixedAudioTrack = destination.stream.getAudioTracks()[0] ?? null;
+    } finally {
+      setTimeout(
+        () => {
+          audioContext.close().catch(() => {});
         },
-      } as any,
-      video: false,
-    });
-
-    const desktopSource =
-      audioContext.createMediaStreamSource(desktopAudioStream);
-
-    desktopSource.connect(destination);
+        config.duration * 1000 + 1000,
+      );
+    }
   }
-
-  const audioTrack = destination.stream.getAudioTracks()[0];
 
   const finalStream = new MediaStream([
-    ...videoStream.getVideoTracks(),
-    ...(audioTrack ? [audioTrack] : []),
+    ...desktopStream.getVideoTracks(),
+    ...(mixedAudioTrack ? [mixedAudioTrack] : []),
   ]);
 
   const chunks: BlobPart[] = [];
 
   const recorder = new MediaRecorder(finalStream, {
-    mimeType: audioTrack
-      ? 'video/webm; codecs=vp9,opus'
-      : 'video/webm; codecs=vp9',
+    mimeType: mixedAudioTrack
+      ? 'video/webm; codecs=vp8,opus'
+      : 'video/webm; codecs=vp8',
   });
 
   recorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
+    if (e.data.size > 0) {
+      chunks.push(e.data);
+    }
   };
 
   const stopped = new Promise<Blob>((resolve) => {
-    recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+    recorder.onstop = () =>
+      resolve(
+        new Blob(chunks, {
+          type: 'video/webm',
+        }),
+      );
   });
 
-  recorder.start();
+  recorder.start(1000);
+
   await new Promise((r) => setTimeout(r, config.duration * 1000));
+
   recorder.stop();
 
-  videoStream.getTracks().forEach((t) => t.stop());
-
   const blob = await stopped;
+
+  desktopStream.getTracks().forEach((t) => t.stop());
+  micStream?.getTracks().forEach((t) => t.stop());
+  finalStream.getTracks().forEach((t) => t.stop());
+
   return new Uint8Array(await blob.arrayBuffer());
 }
