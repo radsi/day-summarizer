@@ -1,13 +1,3 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
-
-/**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
- *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
- */
 import path from 'path';
 import fs from 'fs';
 import {
@@ -16,12 +6,9 @@ import {
   shell,
   ipcMain,
   desktopCapturer,
-  screen,
   Tray,
   Menu,
 } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 let captureInterval: NodeJS.Timeout | null = null;
@@ -100,7 +87,7 @@ ipcMain.handle('get-screen-sources', async () => {
   }));
 });
 
-ipcMain.handle('build-slideshow-video', async () => {
+ipcMain.handle('build-slideshow-video', async (event, config: any) => {
   const files = fs.readdirSync(capturesDir);
 
   const sorted = files
@@ -113,7 +100,7 @@ ipcMain.handle('build-slideshow-video', async () => {
 
   const baseDir =
     process.env.DEBUG === 'true'
-      ? process.cwd()
+      ? capturesDir
       : path.dirname(app.getPath('exe'));
 
   const outputDir = path.join(baseDir, 'slideshows');
@@ -125,15 +112,22 @@ ipcMain.handle('build-slideshow-video', async () => {
   const chunks: string[] = [];
 
   for (const file of sorted) {
-    const fullPath = path.join(capturesDir, file);
+    const fullPath = path.join(capturesDir, file).replace(/\\/g, '/');
 
     if (file.endsWith('.webm')) {
-      chunks.push(`file '${fullPath.replace(/\\/g, '/')}'`);
+      chunks.push(`file '${fullPath}'`);
     }
 
     if (file.endsWith('.png')) {
-      chunks.push(`file '${fullPath.replace(/\\/g, '/')}'\nduration 0.5`);
+      chunks.push(`file '${fullPath}'`);
+      chunks.push(`duration ${config.duration}`);
     }
+  }
+
+  const lastFile = sorted[sorted.length - 1];
+  if (lastFile?.endsWith('.png')) {
+    const lastPath = path.join(capturesDir, lastFile).replace(/\\/g, '/');
+    chunks.push(`file '${lastPath}'`);
   }
 
   const listPath = path.join(capturesDir, 'list.txt');
