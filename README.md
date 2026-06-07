@@ -16,6 +16,7 @@ Desktop application that captures screenshots or short screen recordings at fixe
 - 🖥️ Optional desktop audio capture
 - 🕒 Auto-stop at a defined time
 - 🎞️ Automatic slideshow/video generation from captures
+- 🧊 Minimize to tray (run in background)
 
 ---
 
