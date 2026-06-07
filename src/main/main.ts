@@ -58,12 +58,6 @@ ipcMain.handle('clear-captures', () => {
   return true;
 });
 
-ipcMain.on('trigger-capture', (event, config) => {
-  if (mainWindow) {
-    mainWindow.webContents.send('do-capture', config);
-  }
-});
-
 ipcMain.handle(
   'save-media',
   async (_event, fileName: string, data: Uint8Array) => {
