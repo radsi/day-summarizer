@@ -14,8 +14,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeDoCapture: (listener: any) =>
     ipcRenderer.removeListener('do-capture', listener),
 
-  triggerCapture: (config: any) => ipcRenderer.send('trigger-capture', config),
-
   saveMedia: (fileName: string, buffer: Uint8Array) =>
     ipcRenderer.invoke('save-media', fileName, Array.from(buffer)),
 
