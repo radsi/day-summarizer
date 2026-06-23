@@ -4,4 +4,8 @@ Day Summarizer is a desktop application that captures screenshots or short scree
 
 **FFMPEG is required**
 
+To use it, download the latest release or make your own build by cloning this repository.
+
+This was made because I thought it was cool.
+
 https://github.com/user-attachments/assets/761a5c8a-c460-4c91-9d70-3d7ee23761d8
